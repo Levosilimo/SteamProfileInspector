@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "postcss-nesting": "^12.0.0"
+  },
+  "dependencies": {
+    "react-shadow": "^20.3.0"
+  }
+}

@@ -1,0 +1,19 @@
+.bg-store {
+    background-color: #1B2838;
+}
+
+.-translate-y-30\/1{
+    --tw-translate-y: -3000%;
+}
+
+.equipped-item-lore-wrapper {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    width: max-content;
+    gap: 0.3rem;
+    color: white;
+    text-shadow: 2px 5px 5px black;
+    backdrop-filter: blur(.5rem) contrast(65%);
+    padding: 0.5rem;
+}
