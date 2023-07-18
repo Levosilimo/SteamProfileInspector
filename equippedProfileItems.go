@@ -136,7 +136,7 @@ func createEquippedItemFromDefinition(item itemDefinition, isActive bool) Equipp
 	}
 }
 
-func addMarketURIToEquippedItems(equippedItems []EquippedItem) []EquippedItem {
+func addMarketURIToEquippedItems(equippedItems []EquippedItem, currency int) []EquippedItem {
 	eqItemCh := make(chan EquippedItem, len(equippedItems))
 
 	for i := range equippedItems {
@@ -168,7 +168,7 @@ func addMarketURIToEquippedItems(equippedItems []EquippedItem) []EquippedItem {
 									fmt.Printf("Error parsing number from response body for item %s: %v", item.ItemName, err)
 								} else {
 									item.ItemMarketID = num
-									item = putMarketPriceToEquippedItem(item)
+									item = putMarketPriceToEquippedItem(item, currency)
 								}
 							}
 						} else {
@@ -190,9 +190,9 @@ func addMarketURIToEquippedItems(equippedItems []EquippedItem) []EquippedItem {
 	return equippedItemsWithMarketURI
 }
 
-func putMarketPriceToEquippedItem(item EquippedItem) EquippedItem {
+func putMarketPriceToEquippedItem(item EquippedItem, currency int) EquippedItem {
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(fmt.Sprintf("https://steamcommunity.com/market/itemordershistogram?language=english&currency=1&item_nameid=%d", item.ItemMarketID))
+	resp, err := client.Get(fmt.Sprintf("https://steamcommunity.com/market/itemordershistogram?language=english&currency=%d&item_nameid=%d", currency, item.ItemMarketID))
 	if err != nil {
 		fmt.Printf("Error making a request to steam market API for item %s: %v", item.ItemName, err)
 	} else {

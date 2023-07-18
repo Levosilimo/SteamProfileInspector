@@ -1,17 +1,18 @@
-import React, {useState} from "react";
-import {OpenCustomURLViaGolang} from "../../wailsjs/go/main/App";
+import React, {Dispatch, SetStateAction, useState} from "react";
 import {openSteamLink} from "../util";
+import {main} from "../../wailsjs/go/models";
+import AppSettings = main.AppSettings;
 
 interface ApiKeyFormProps {
-    setApiKey: (arg0: string) => void;
+    settings: AppSettings
+    setSettings: Dispatch<SetStateAction<AppSettings>>;
     status: number;
     setStatus: (arg0: number) => void;
-    openLinksInSteam: number
 }
 
-function ApiKeyForm({setApiKey, status, setStatus, openLinksInSteam}: ApiKeyFormProps) {
+function ApiKeyForm({settings, setSettings, status, setStatus}: ApiKeyFormProps) {
     const [showApiKey, setShowApiKey] = useState(false);
-    const [APIInputValue, setAPIInputValue] = useState<string>("");
+    const [APIInputValue, setAPIInputValue] = useState<string>(settings.api_key);
 
     const handleShowApiKey = (event: React.FormEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -40,12 +41,12 @@ function ApiKeyForm({setApiKey, status, setStatus, openLinksInSteam}: ApiKeyForm
         if (!form.checkValidity()) {
             return;
         }
-        setApiKey(APIInputValue);
+        setSettings(prevSettings => ({ ...prevSettings, api_key: APIInputValue }));
         setStatus(1);
     };
 
     const handleGetApiClick = () => {
-        openSteamLink("https://steamcommunity.com/dev/apikey", openLinksInSteam);
+        openSteamLink("https://steamcommunity.com/dev/apikey", settings.open_links_in_steam);
     }
 
     return (
@@ -109,7 +110,8 @@ function ApiKeyForm({setApiKey, status, setStatus, openLinksInSteam}: ApiKeyForm
                 </div>
             </form>
             <p className="block px-2.5 py-1 w-max mt-1 text-sm text-gray-900 bg-gray-50 rounded-lg border-l-gray-100 border-l-1 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500">
-                <span onClick={handleGetApiClick} className="font-medium text-blue-600 cursor-pointer hover:underline dark:text-blue-500">
+                <span onClick={handleGetApiClick}
+                      className="font-medium text-blue-600 cursor-pointer hover:underline dark:text-blue-500">
                     Get API Key
                 </span>
             </p>

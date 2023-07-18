@@ -6,9 +6,8 @@ import pointsIcon from './assets/steam/points-icon.svg'
 import {
     AddMarketURIToEquippedItemsViaGolang,
     GetEquippedItemsViaGolang,
-    GetPageBodyViaGolang,
-    GetSteam32IDViaGolang,
-    OpenCustomURLViaGolang, PutMarketPriceToEquippedItemViaGolang
+    GetPageBodyViaGolang, GetSettings,
+    GetSteam32IDViaGolang, SaveAppSettings
 } from "../wailsjs/go/main/App";
 import React, {useEffect, useState} from "react";
 import ApiKeyForm from "./components/ApiKeyForm";
@@ -16,20 +15,19 @@ import SettingsModal from "./components/SettingsModal";
 import {openSteamLink, steam32to64} from "./util";
 import {main} from "../wailsjs/go/models";
 import EquippedItem = main.EquippedItem;
+import AppSettings = main.AppSettings;
 
 function App() {
     const domParser = new DOMParser();
-    const [apiKey, setApiKey] = useState("");
+    const [settings, setSettings] = useState<AppSettings>({api_key:"", steam_currency: 1, open_links_in_steam: 2})
     const [user32Id, setUser32Id] = useState<string>("Not set");
     const [equippedItems, setEquippedItems] = useState<Array<EquippedItem>>([]);
     const [apiInputStatus, setApiInputStatus] = useState<number>(0);
     const [profileInput, setProfileInput] = useState<string>("");
     const [miniprofile, setMiniprofile] = useState<string | JSX.Element | JSX.Element[]>();
-    const [isAuto, setAuto] = useState<boolean>(false);
     const [isLoadingProfile, setLoadingProfile] = useState<boolean>(false);
     const [isLoadingItems, setLoadingItems] = useState<boolean>(false);
     const [showSettings, setShowSettings] = useState<boolean>(false);
-    const [openLinksInSteam, setOpenLinksInSteam] = useState<number>(2);
 
     function handleProfileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
         const inputValue = event.target.value;
@@ -66,7 +64,7 @@ function App() {
                     GetEquippedItemsViaGolang(steam32to64(parseInt(user32Id)), "russian").then(
                         (result) => {
                             setEquippedItems(result.sort((a, b) => a.community_item_class - b.community_item_class));
-                            AddMarketURIToEquippedItemsViaGolang(result)
+                            AddMarketURIToEquippedItemsViaGolang(result, settings.steam_currency)
                                 .then((result) => {
                                     const equippedItemsWithMarketURI = result.sort(
                                         (a, b) => a.community_item_class - b.community_item_class
@@ -83,7 +81,7 @@ function App() {
                 }
             ).catch((err: string) => {
                 if (err === "API key not authorized to access Steam API") {
-                    setApiKey("");
+                    setSettings(prevSettings => ({ ...prevSettings, api_key: '' }));
                     setApiInputStatus(-1);
                     fetchProfileData(profileURI);
                 } else {
@@ -95,7 +93,7 @@ function App() {
             });
         };
 
-        fetchProfileData(profileURI, apiKey);
+        fetchProfileData(profileURI, settings.api_key);
     }
 
     useEffect(() => {
@@ -112,16 +110,17 @@ function App() {
     });
 
     useEffect(() => {
-        let timerId: number | null = null;
-        if (isAuto) {
-            timerId = setTimeout(() => {
-                inspectProfile();
-            }, 300);
+        SaveAppSettings(settings).catch(err => console.error(err))
+    }, [settings]);
+
+    useEffect(() => {
+        async function getSettings() {
+            const result = await GetSettings();
+            setSettings(result);
         }
-        return () => {
-            if (timerId) clearTimeout(timerId);
-        };
-    }, [profileInput, isAuto]);
+
+        getSettings();
+    }, []);
 
     return (
         <div className="min-h-screen grid grid-cols-1 place-items-start justify-items-center mx-auto py-8 bg-store">
@@ -130,8 +129,7 @@ function App() {
                     type="button" onClick={() => setShowSettings(!showSettings)}>
                 Settings
             </button>
-            <ApiKeyForm setApiKey={setApiKey} status={apiInputStatus} setStatus={setApiInputStatus}
-                        openLinksInSteam={openLinksInSteam}/>
+            <ApiKeyForm settings={settings} setSettings={setSettings} status={apiInputStatus} setStatus={setApiInputStatus} />
             <div
                 className="text-blue-900 bg-white text-2xl font-bold font-mono p-1 flex flex-col items-center rounded-lg">
                 <div className="flex">
@@ -202,14 +200,14 @@ function App() {
                                 <h4>{item.item_title}</h4>
                             </div>
                             <button onClick={() => {
-                                if (item.is_active_definition) openSteamLink(item.item_points_uri, openLinksInSteam)
+                                if (item.is_active_definition) openSteamLink(item.item_points_uri, settings.open_links_in_steam)
                             }}
                                     className={"text-white rounded px-2 mx-1 uppercase inline-flex items-center gap-1 flex-row-reverse tracking-wide" + " " + (item.is_active_definition ? "bg-blue-500" : "bg-blue-300 cursor-not-allowed")}>
                                 <img className="h-4 w-4" src={pointsIcon}/>
                                 {item.point_cost}
                             </button>
                             <button onClick={() => {
-                                if (item.item_market_uri) openSteamLink(item.item_market_uri, openLinksInSteam)
+                                if (item.item_market_uri) openSteamLink(item.item_market_uri, settings.open_links_in_steam)
                             }}
                                     className={"text-white rounded px-2 mx-1 uppercase inline-flex tracking-wide" + " " + (item.item_market_uri ? "bg-blue-500" : "bg-blue-300 cursor-not-allowed")}>
                                 {isLoadingItems ? (<span className={"inline-block"}><svg aria-hidden="true"
@@ -232,8 +230,7 @@ function App() {
                 ))}
             </div>)
             }
-            <SettingsModal show={showSettings} setShow={setShowSettings} checkedRadio={openLinksInSteam}
-                           setRadio={setOpenLinksInSteam}/>
+            <SettingsModal settings={settings} setSettings={setSettings} show={showSettings} setShow={setShowSettings} />
         </div>
     )
 }

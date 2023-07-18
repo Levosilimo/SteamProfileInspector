@@ -18,7 +18,8 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx      context.Context
+	settings AppSettings
 }
 
 // NewApp creates a new App application struct
@@ -30,6 +31,7 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	// Perform your setup here
 	a.ctx = ctx
+	a.settings, _ = LoadSettings()
 }
 
 // domReady is called after front-end resources have been loaded
@@ -235,12 +237,12 @@ func (a *App) OpenCustomURLViaGolang(url string, fallbackUrl string, appName str
 	return openCustomUrl(url, fallbackUrl, appName)
 }
 
-func (a *App) AddMarketURIToEquippedItemsViaGolang(items []EquippedItem) []EquippedItem {
-	return addMarketURIToEquippedItems(items)
+func (a *App) AddMarketURIToEquippedItemsViaGolang(items []EquippedItem, currency int) []EquippedItem {
+	return addMarketURIToEquippedItems(items, currency)
 }
 
-func (a *App) PutMarketPriceToEquippedItemViaGolang(item EquippedItem) EquippedItem {
-	return putMarketPriceToEquippedItem(item)
+func (a *App) PutMarketPriceToEquippedItemViaGolang(item EquippedItem, currency int) EquippedItem {
+	return putMarketPriceToEquippedItem(item, currency)
 }
 
 func openCustomUrl(url string, fallbackUrl string, appName string) error {

@@ -1,5 +1,21 @@
 export namespace main {
 	
+	export class AppSettings {
+	    api_key: string;
+	    open_links_in_steam: number;
+	    steam_currency: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.api_key = source["api_key"];
+	        this.open_links_in_steam = source["open_links_in_steam"];
+	        this.steam_currency = source["steam_currency"];
+	    }
+	}
 	
 	export class EquippedItem {
 	    appid: number;
